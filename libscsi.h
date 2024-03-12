@@ -14,3 +14,4 @@
 
 
 int do_lock_unlock(int nargs, char **argv); //CMD42
+int disk_format(char *device);

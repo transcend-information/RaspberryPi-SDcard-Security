@@ -106,9 +106,20 @@ int do_lock_unlock(int nargs, char **argv)
     else
     {
         printf("ioctl success\n");
-        printf("status: %d\n", io_hdr.status);
+		if(cmd42_para==CMD42_ERASE)	
+			disk_format(device);
         ret = 1;
     }
 	close(fd);
 	return ret;
+}
+
+int disk_format(char *device)
+{
+	char cmd[30];
+	strcpy(cmd, "sudo mkfs.vfat ");
+	strcat(cmd, device);
+
+	if(system(cmd) == -1)
+		printf("Error to format\n");	
 }
