@@ -90,8 +90,13 @@ int do_lock_unlock(int nargs, char **argv)
     io_hdr.mx_sb_len = sizeof(sense_b);
     io_hdr.sbp = sense_b;
     io_hdr.dxfer_direction = SG_DXFER_TO_DEV;
-    io_hdr.dxfer_len = sizeof(data_block);
-    io_hdr.dxferp = data_block;
+    io_hdr.dxfer_len = block_size;
+
+	if(cmd42_para==CMD42_ERASE)	
+		io_hdr.dxferp = data_block_onebyte;
+	else
+    	io_hdr.dxferp = data_block;
+		
     io_hdr.timeout = 20000;
     if(ioctl(fd, SG_IO, &io_hdr) < 0)
     {
