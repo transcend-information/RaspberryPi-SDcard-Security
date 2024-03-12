@@ -1,8 +1,18 @@
+
+## Compile
+```bash
 gcc -o main  main.c libscsi.c
 
+```
+
+## How to use
+```bash
 sudo ./main cmd42 <password> <parameter> <device>
+```
 
 or 
 
-sudo ./main -h for help
-
+```bash
+sudo ./main -h 
+```
+for help

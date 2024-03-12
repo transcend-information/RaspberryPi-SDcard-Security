@@ -14,4 +14,8 @@
 
 
 int do_lock_unlock(int nargs, char **argv); //CMD42
-int disk_format(char *device);
+void disk_format(char *device);
+int do_read_status(int nargs, char **argv);
+int read_status(int *fd);
+
+int set_cmd_para(int *cmd_para, char * arg);

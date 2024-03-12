@@ -39,6 +39,10 @@ static struct Command commands[] = {
 		"sl\tset password and lock\n" "u\tunlock\n" "e\tforce erase\n",
 		NULL
 	},
+	{ do_read_status, -1,
+		"status", "<device>\n",
+		NULL
+	},
 	{ 0, 0, 0, 0 }
 };
 

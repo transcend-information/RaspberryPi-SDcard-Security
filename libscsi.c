@@ -29,35 +29,11 @@ int do_lock_unlock(int nargs, char **argv)
 	strcpy(pwd, argv[1]);
 	pwd_len = strlen(pwd);
 
-	if (!strcmp("s", argv[2])) {
-		cmd42_para = CMD42_SET_PWD;
-		printf("Set password: password=%s ...\n", pwd);
-	}
-	else if (!strcmp("c", argv[2])) {
-		cmd42_para = CMD42_CLR_PWD;
-		printf("Clear password: password=%s ...\n", pwd);
-	}
-	else if (!strcmp("l", argv[2])) {
-		cmd42_para = CMD42_LOCK;
-		printf("Lock the card: password=%s ...\n", pwd);
-	}
-	else if (!strcmp("sl", argv[2])) {
-		cmd42_para = CMD42_SET_LOCK;
-		printf("Set password and lock the card: password - %s ...\n", pwd);
-	}
-	else if (!strcmp("u", argv[2])) {
-		cmd42_para = CMD42_UNLOCK;
-		printf("Unlock the card: password=%s ...\n", pwd);
-	}
-	else if (!strcmp("e", argv[2])) {
-		cmd42_para = CMD42_ERASE;
-		printf("Force erase ... (Warning: all card data will be erased together with PWD!)\n");
-	}
-	else {
-		printf("Invalid parameter:\n" "s\tset password\n" "c\tclear password\n" "l\tlock\n"
-		"sl\tset password and lock\n" "u\tunlock\n" "e\tforce erase\n");
+	if(set_cmd_para(&cmd42_para, argv[2]) < 0)
+	{
 		exit(1);
 	}
+
 	device = argv[nargs-1];
 	fd = open(device, O_RDWR);
 	if (fd < 0) {
@@ -114,7 +90,41 @@ int do_lock_unlock(int nargs, char **argv)
 	return ret;
 }
 
-int disk_format(char *device)
+int set_cmd_para(int *cmd_para, char * arg)
+{
+	if (!strcmp("s", arg)) {
+		*cmd_para = CMD42_SET_PWD;
+		printf("Set password...\n");
+	}
+	else if (!strcmp("c", arg)) {
+		*cmd_para = CMD42_CLR_PWD;
+		printf("Clear password...\n");
+	}
+	else if (!strcmp("l", arg)) {
+		*cmd_para = CMD42_LOCK;
+		printf("Lock the card...\n");
+	}
+	else if (!strcmp("sl", arg)) {
+		*cmd_para = CMD42_SET_LOCK;
+		printf("Set password and lock the card ...\n");
+	}
+	else if (!strcmp("u", arg)) {
+		*cmd_para = CMD42_UNLOCK;
+		printf("Unlock the card ...\n");
+	}
+	else if (!strcmp("e", arg)) {
+		*cmd_para = CMD42_ERASE;
+		printf("Force erase ... (Warning: all card data will be erased together with PWD!)\n");
+	}
+	else {
+		printf("Invalid parameter:\n" "s\tset password\n" "c\tclear password\n" "l\tlock\n"
+		"sl\tset password and lock\n" "u\tunlock\n" "e\tforce erase\n");
+		return -1;
+	}
+	return 1;
+}
+
+void disk_format(char *device)
 {
 	char cmd[30];
 	strcpy(cmd, "sudo mkfs.vfat ");
@@ -122,4 +132,68 @@ int disk_format(char *device)
 
 	if(system(cmd) == -1)
 		printf("Error to format\n");	
+}
+
+int do_read_status(int nargs, char **argv)
+{
+	int fd, ret = 0;
+	char *device;
+
+	device = argv[nargs-1];
+	fd = open(device, O_RDWR);
+	if (fd < 0) {
+		perror("open");
+		exit(1);
+	}
+
+	ret = read_status(&fd);
+
+	close(fd);
+	return ret;
+}
+
+int read_status(int *fd)
+{
+	int ret=0;
+
+	__u8 data_block[16]={0};
+    unsigned char sense_b[16]={0};
+    unsigned char CmdBlk16[16] = 
+    { 0xF5, 0x13, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00};
+    sg_io_hdr_t io_hdr;
+    memset(&io_hdr, 0, sizeof(sg_io_hdr_t));
+
+    io_hdr.interface_id = 'S';
+    io_hdr.cmd_len = sizeof(CmdBlk16);
+    io_hdr.cmdp = CmdBlk16;
+    io_hdr.mx_sb_len = sizeof(sense_b);
+    io_hdr.sbp = sense_b;
+    io_hdr.dxfer_direction = SG_DXFER_FROM_DEV;
+    io_hdr.dxfer_len = sizeof(data_block);
+	io_hdr.dxferp = data_block;
+		
+    io_hdr.timeout = 20000;
+
+
+    if(ioctl(*fd, SG_IO, &io_hdr) < 0)
+    {
+        printf("ioctl fail\n");
+        return -1;
+    }
+    else
+    {
+        printf("ioctl success\n");
+    }
+
+	if(data_block[1] == 0x02 || data_block[3] == 0x03)
+	{
+		printf("Device is lock\n");
+		ret = 1;
+	}
+	else
+	{
+		printf("Device is unlock\n");
+		ret = 0;
+	}	
+	return ret;
 }
