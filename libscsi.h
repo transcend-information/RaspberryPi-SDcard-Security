@@ -16,6 +16,9 @@
 int do_lock_unlock(int nargs, char **argv); //CMD42
 void disk_format(char *device);
 int do_read_status(int nargs, char **argv);
-int read_status(int *fd);
 
 int set_cmd_para(int *cmd_para, char * arg);
+int set_cmd42(int cmd_para,  char *pwd, int * fd);
+int * read_status(int *fd);
+void show_cmd42_error_msg(int cmd_para, int lock_status);
+int ask_yes_or_no(char * warnInfo);
