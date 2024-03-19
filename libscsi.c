@@ -263,16 +263,18 @@ int set_cmd42(int cmd_para,  char *pwd, int *fd)
 }
 
 int ask_yes_or_no(char * warnInfo)
-{
-	char answer;
+{	
+	printf("%s\n",warnInfo);
+	printf("Do you want to continue? [Y/n] ");
 	while (1)
 	{
-		printf("%s\n",warnInfo);
-		printf("Press [Y/y] to continue or [N/n] to cancel : ");
-		scanf("%c", &answer);
-		if(answer == 'Y' || answer == 'y')
+		char *answer;
+		scanf("%s", answer);
+		if(answer[0] == 'Y' || answer[0] == 'y')
 			return 1;
-		else if(answer == 'N' || answer == 'n')
+		else if(answer[0] == 'N' || answer[0] == 'n')
 			return 0;
+		else
+			printf("Please press [Y/y] to continue or [N/n] to cancel :");
 	}
 }
