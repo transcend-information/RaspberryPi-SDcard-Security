@@ -1,320 +1,273 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <argp.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include "libscsi.h"
 
-#define _GNU_SOURCE
+#define MAX_PWD_LEN 16
+#define MIN_PWD_LEN 4
 
-#define MMC_VERSION	"0.1"
-
-#define BASIC_HELP 0
-#define ADVANCED_HELP 1
-
-typedef int (*CommandFunction)(int argc, char **argv);
-
-struct Command {
-	CommandFunction	func;	/* function which implements the command */
-	int	nargs;		/* if == 999, any number of arguments
-				   if >= 0, number of arguments,
-				   if < 0, _minimum_ number of arguments */
-	char	*verb;		/* verb */
-	char	*help;		/* help lines; from the 2nd line onward they 
-                                   are automatically indented */
-        char    *adv_help;      /* advanced help message; from the 2nd line 
-                                   onward they are automatically indented */
-
-	/* the following fields are run-time filled by the program */
-	char	**cmds;		/* array of subcommands */
-	int	ncmds;		/* number of subcommand */
+struct  arguments
+{
+	int cmd42_para;
+	char *pwd[2];
+	int pwd_num;
+	// char *new_pwd;
+	int cmd13;
+	char *device;
+	int arg_count;
 };
 
-static struct Command commands[] = {
-	/*
-	 *	avoid short commands different for the case only
-	 */
-	{ do_lock_unlock, -3,
-		"cmd42", "<password> " "<parameter> " "<device>\n"
-		"Usage: mmc cmd42 <password> <s|c|l|u|e> <device>\n"
-		"s\tset password\n" "c\tclear password\n" "l\tlock\n" 
-		"sl\tset password and lock\n" "u\tunlock\n" "e\tforce erase\n",
-		NULL
-	},
-	{ do_read_status, -1,
-		"status", "<device>\n",
-		NULL
-	},
-	{ 0, 0, 0, 0 }
-};
-
-static char *get_prgname(char *programname)
+int parse_pwd(char *arg, int max_num, struct arguments *argument)
 {
-	char	*np;
-	np = strrchr(programname,'/');
-	if(!np)
-		np = programname;
-	else
-		np++;
-
-	return np;
-}
-
-static void print_help(char *programname, struct Command *cmd, int helptype)
-{
-	char	*pc;
-
-	printf("\t%s %s ", programname, cmd->verb );
-
-	if (helptype == ADVANCED_HELP && cmd->adv_help)
-		for(pc = cmd->adv_help; *pc; pc++){
-			putchar(*pc);
-			if(*pc == '\n')
-				printf("\t\t");
+	char *token;
+	int count=0;
+	const char s[2] = " ";
+	token = strtok(arg, s);
+	while(token != NULL)
+	{
+		if(count < max_num)
+		{
+			argument->pwd[count]=token;
+			count++;
+			token = strtok(NULL, s);
 		}
-	else
-		for(pc = cmd->help; *pc; pc++){
-			putchar(*pc);
-			if(*pc == '\n')
-				printf("\t\t");
-		}
-
-	putchar('\n');
-}
-
-static void help(char *np)
-{
-	struct Command *cp;
-
-	printf("Usage:\n");
-	for( cp = commands; cp->verb; cp++ )
-		print_help(np, cp, BASIC_HELP);
-
-	printf("\n\t%s help|--help|-h\n\t\tShow the help.\n",np);
-	printf("\n\t%s <cmd> --help\n\t\tShow detailed help for a command or subset of commands.\n",np);
-	printf("\n%s\n", MMC_VERSION);
-}
-
-static int split_command(char *cmd, char ***commands)
-{
-	int	c, l;
-	char	*p, *s;
-
-	for( *commands = 0, l = c = 0, p = s = cmd ; ; p++, l++ ){
-		if ( *p && *p != ' ' )
-			continue;
-
-		/* c + 2 so that we have room for the null */
-		(*commands) = realloc( (*commands), sizeof(char *)*(c + 2));
-		(*commands)[c] = strndup(s, l);
-		c++;
-		l = 0;
-		s = p+1;
-		if( !*p ) break;
+		else
+			return 0;
 	}
-
-	(*commands)[c] = 0;
-	return c;
-}
-
-/*
-	This function checks if the passed command is ambiguous
-*/
-static int check_ambiguity(struct Command *cmd, char **argv){
-	int		i;
-	struct Command	*cp;
-	/* check for ambiguity */
-	for( i = 0 ; i < cmd->ncmds ; i++ ){
-		int match;
-		for( match = 0, cp = commands; cp->verb; cp++ ){
-			int	j, skip;
-			char	*s1, *s2;
-
-			if( cp->ncmds < i )
-				continue;
-
-			for( skip = 0, j = 0 ; j < i ; j++ )
-				if( strcmp(cmd->cmds[j], cp->cmds[j])){
-					skip=1;
-					break;
-				}
-			if(skip)
-				continue;
-
-			if( !strcmp(cmd->cmds[i], cp->cmds[i]))
-				continue;
-			for(s2 = cp->cmds[i], s1 = argv[i+1];
-				*s1 == *s2 && *s1; s1++, s2++ ) ;
-			if( !*s1 )
-				match++;
-		}
-		if(match){
-			int j;
-			fprintf(stderr, "ERROR: in command '");
-			for( j = 0 ; j <= i ; j++ )
-				fprintf(stderr, "%s%s",j?" ":"", argv[j+1]);
-			fprintf(stderr, "', '%s' is ambiguous\n",argv[j]);
-			return -2;
-		}
-	}
-	return 0;
-}
-
-/*
- * This function, compacts the program name and the command in the first
- * element of the '*av' array
- */
-static int prepare_args(int *ac, char ***av, char *prgname, struct Command *cmd ){
-
-	char	**ret;
-	int	i;
-	char	*newname;
-
-	ret = (char **)malloc(sizeof(char*)*(*ac+1));
-	newname = (char*)malloc(strlen(prgname)+strlen(cmd->verb)+2);
-	if( !ret || !newname ){
-		free(ret);
-		free(newname);
-		return -1;
-	}
-
-	ret[0] = newname;
-	for(i=0; i < *ac ; i++ )
-		ret[i+1] = (*av)[i];
-
-	strcpy(newname, prgname);
-	strcat(newname, " ");
-	strcat(newname, cmd->verb);
-
-	(*ac)++;
-	*av = ret;
-
-	return 0;
-
-}
-
-/*
-	This function performs the following jobs:
-	- show the help if '--help' or 'help' or '-h' are passed
-	- verify that a command is not ambiguous, otherwise show which
-	  part of the command is ambiguous
-	- if after a (even partial) command there is '--help' show detailed help
-	  for all the matching commands
-	- if the command doesn't match show an error
-	- finally, if a command matches, they return which command matched and
-	  the arguments
-
-	The function return 0 in case of help is requested; <0 in case
-	of uncorrect command; >0 in case of matching commands
-	argc, argv are the arg-counter and arg-vector (input)
-	*nargs_ is the number of the arguments after the command (output)
-	**cmd_  is the invoked command (output)
-	***args_ are the arguments after the command
-
-*/
-static int parse_args(int argc, char **argv,
-		      CommandFunction *func_,
-		      int *nargs_, char **cmd_, char ***args_ )
-{
-	struct Command	*cp;
-	struct Command	*matchcmd=0;
-	char		*prgname = get_prgname(argv[0]);
-	int		i=0, helprequested=0;
-
-	if( argc < 2 || !strcmp(argv[1], "help") ||
-		!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help")){
-		help(prgname);
-		return 0;
-	}
-
-	for( cp = commands; cp->verb; cp++ )
-		if( !cp->ncmds)
-			cp->ncmds = split_command(cp->verb, &(cp->cmds));
-
-	for( cp = commands; cp->verb; cp++ ){
-		int     match;
-
-		if( argc-1 < cp->ncmds )
-			continue;
-		for( match = 1, i = 0 ; i < cp->ncmds ; i++ ){
-			char	*s1, *s2;
-			s1 = cp->cmds[i];
-			s2 = argv[i+1];
-
-			for(s2 = cp->cmds[i], s1 = argv[i+1];
-				*s1 == *s2 && *s1;
-				s1++, s2++ ) ;
-			if( *s1 ){
-				match=0;
-				break;
-			}
-		}
-
-		/* If you understand why this code works ...
-			you are a genious !! */
-		if(argc>i+1 && !strcmp(argv[i+1],"--help")){
-			if(!helprequested)
-				printf("Usage:\n");
-			print_help(prgname, cp, ADVANCED_HELP);
-			helprequested=1;
-			continue;
-		}
-
-		if(!match)
-			continue;
-
-		matchcmd = cp;
-		*nargs_  = argc-matchcmd->ncmds-1;
-		*cmd_ = matchcmd->verb;
-		*args_ = argv+matchcmd->ncmds+1;
-		*func_ = cp->func;
-
-		break;
-	}
-
-	if(helprequested){
-		printf("\n%s\n", MMC_VERSION);
-		return 0;
-	}
-
-	if(!matchcmd){
-		fprintf( stderr, "ERROR: unknown command '%s'\n",argv[1]);
-		help(prgname);
-		return -1;
-	}
-
-	if(check_ambiguity(matchcmd, argv))
-		return -2;
-
-	/* check the number of argument */
-	if (matchcmd->nargs < 0 && matchcmd->nargs < -*nargs_ ){
-		fprintf(stderr, "ERROR: '%s' requires minimum %d arg(s)\n",
-			matchcmd->verb, -matchcmd->nargs);
-			return -2;
-	}
-	if(matchcmd->nargs >= 0 && matchcmd->nargs != *nargs_ && matchcmd->nargs != 999){
-		fprintf(stderr, "ERROR: '%s' requires %d arg(s)\n",
-			matchcmd->verb, matchcmd->nargs);
-			return -2;
-	}
-	
-        if (prepare_args( nargs_, args_, prgname, matchcmd )){
-                fprintf(stderr, "ERROR: not enough memory\\n");
-		return -20;
-        }
-
-
+	argument->pwd_num = count;
 	return 1;
 }
-int main(int ac, char **av )
-{
-	char		*cmd=0, **args=0;
-	int		nargs=0, r;
-	CommandFunction func=0;
 
-	r = parse_args(ac, av, &func, &nargs, &cmd, &args);
-	if( r <= 0 ){
-		/* error or no command to parse*/
-		exit(-r);
+int match_pwd_rule(char *pwd, char **note)
+{
+	if(strlen(pwd) > MAX_PWD_LEN)
+	{
+		*note = "Password need 4~16 characters";
+		return 0;
+	}
+	else if(strlen(pwd) < MIN_PWD_LEN)
+	{
+		*note = "Password need 4~16 characters";
+		return 0;
+	}
+	return 1;
+}
+
+static int parse_opt(int key, char *arg, struct argp_state *state)
+{
+	struct arguments *argument = state->input;	
+
+	switch(key){
+		case 's':{
+			if(argument->cmd42_para < 0)
+				argument->cmd42_para = CMD42_SET_PWD;
+			else
+				goto Confused;
+			break;
+		}
+		case 'q':{
+			if(argument->cmd42_para < 0)
+				argument->cmd42_para = CMD42_SET_LOCK;
+			else
+				goto Confused;
+			break;
+		}
+		case 'c':{
+			if(argument->cmd42_para < 0)
+				argument->cmd42_para = CMD42_CLR_PWD;
+			else
+				goto Confused;
+			break;
+		}
+		case 'l':{
+			if(argument->cmd42_para < 0)
+				argument->cmd42_para = CMD42_LOCK;
+			else
+				goto Confused;
+			break;
+		}
+		case 'u':{
+			if(argument->cmd42_para < 0)
+				argument->cmd42_para = CMD42_UNLOCK;
+			else
+				goto Confused;
+			break;
+		}
+		case 'e':{
+			if(argument->cmd42_para < 0)
+				argument->cmd42_para = CMD42_ERASE;
+			else
+				goto Confused;
+			break;
+		}
+		case 't':{
+			argument->cmd13 = 1;
+			break;
+		}
+		case ARGP_KEY_ARG:{
+			argument->device = arg;
+			argument->arg_count++;
+			// printf("%s\n", arg);
+			break;
+		}
+		case ARGP_KEY_END:{
+			if(argument->arg_count < 1)
+				argp_error(state, "requires minimum 1 device path");
+			break;
+		}
+		Confused:{
+			argp_error(state, "the command is confuseing");	
+			return -1;
+		}
 	}
 
-	exit(func(nargs, args));
+	switch (key)
+	{
+		case 's': case 'q':{
+			if(!parse_pwd(arg, 2, argument))
+			{
+				argp_failure(state, 0, 0,
+								"Defining too many sets of password, "
+								"please set according to the format: \n"
+								"\t-s \"Password New_Password\""
+						);
+				return -1;
+			}
+			
+			char *ret_note;
+			if(!match_pwd_rule(argument->pwd[0], &ret_note) || 
+				(argument->pwd[1] != NULL && !match_pwd_rule(argument->pwd[1], &ret_note)))
+			{
+				argp_failure(state, 0, 0, "%s", ret_note);
+				return -1;
+			}
+			break;
+		}
+		case 'c': case 'l': case 'u':{
+			if(!parse_pwd(arg, 1, argument))
+			{
+				argp_failure(state, 1, 0, "Password is illegal");
+				return -1;
+			}
+			
+			char *ret_note;
+			if(!match_pwd_rule(argument->pwd[0], &ret_note))
+			{
+				argp_failure(state, 0, 0, "%s", ret_note);
+				return -1;
+			}
+			break;
+		}
+		
+		default:
+			break;
+	}
+
+	return 0;
+
+error:
+	return -1;
+}
+
+int main(int argc, char **argv )
+{
+	struct argp_option options[] = {
+		{0, 0, 0, 0, "Security Options:", 1},
+		{"set-pwd", 's', "\"Password [New Password]\"", 0, "Set SD password or change password"},
+		{"quick-lock", 'q', "\"Password [New Password]\"", 0, "Set SD password and lock the card"},		
+		{"clear", 'c', "Password", 0, "Clear SD password"},
+		{"lock"	, 'l', "Password", 0, "Lock SD by password"},
+		{"unlock", 'u', "Password", 0, "Unlock SD by password"},
+		{"erase", 'e', 0, 0, "Force erase SD card"},
+		{0, 0, 0, 0, "Status Options:", 2},
+		{"status", 't', 0, 0, "Check SD state"},
+		{0}
+	};
+
+	struct arguments argument = {
+		.cmd42_para = -1,
+		.pwd = NULL,
+		.cmd13 = 0,
+		.device = NULL,
+	};
+	struct argp argp = {options, parse_opt, "Device", 0};
+	if(!argp_parse(&argp, argc, argv, 0, 0, &argument))
+	{
+		printf("Device is %s\n"
+			   "cmd42 is %d\n"
+			   "pwd is %s\n"
+			   "new_pwd is %s\n"
+			   "cmd13 is %d\n",
+			   argument.device,
+			   argument.cmd42_para,
+			   argument.pwd[0],
+			   argument.pwd[1],
+			   argument.cmd13);
+
+		if(argument.cmd42_para != -1)
+		{
+			int ret = 0;
+			ret = do_lock_unlock_test(argument.device, argument.cmd42_para, argument.pwd);
+			if(ret == 1)
+			{	
+				int fd;
+				int *status;
+				if(argument.pwd[0] != NULL)
+				{
+
+				}
+				fd = open(argument.device, O_RDWR);
+				if (fd < 0) {
+					perror("open");
+					exit(1);
+				}
+
+				status = read_status(&fd);
+
+				printf("lock/unlock: %d, result: %d\n", status[0], status[1]);
+
+				if(status[1]==1)
+					show_cmd42_error_msg(argument.cmd42_para, status[0], argument.pwd_num);
+				else
+				{
+					if(status[0]==1)
+						printf("Status: Lock\n");
+					else
+					{
+						if(argument.cmd42_para==CMD42_ERASE)	
+							disk_format(argument.device);
+						printf("Status: Unlock\n");
+					}
+				}
+				close(fd);
+			}
+		}
+		else if(argument.cmd13 == 1)
+		{
+			int fd, ret;
+			int *status;
+			fd = open(argument.device, O_RDWR);
+			if (fd < 0) {
+				perror("open");
+				exit(1);
+			}
+			status = read_status(&fd);
+
+			ret = status[0];
+			printf("lock/unlock: %d, result: %d\n", status[0],status[1]);
+			if(ret)
+				printf("Device is lock\n");
+			else
+				printf("Device is unlock\n");
+
+			close(fd);
+
+		}
+
+		return 0;
+	}
+	return 1;
 }

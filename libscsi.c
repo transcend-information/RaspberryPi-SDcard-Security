@@ -50,7 +50,7 @@ int do_lock_unlock(int nargs, char **argv)
 		
 		if(status[0]==0)
 		{
-			show_cmd42_error_msg(cmd42_para, status[0]);
+			show_cmd42_error_msg(cmd42_para, status[0],0);
 			close(fd);
 			exit(1);
 		}
@@ -73,7 +73,7 @@ int do_lock_unlock(int nargs, char **argv)
 		printf("lock/unlock: %d, result: %d\n", status[0], status[1]);
 
 		if(status[1]==1)
-			show_cmd42_error_msg(cmd42_para, status[0]);
+			show_cmd42_error_msg(cmd42_para, status[0], 2);
 		else
 		{
 			if(status[0]==1)
@@ -87,6 +87,55 @@ int do_lock_unlock(int nargs, char **argv)
 		}
 	}
 
+	close(fd);
+	return ret;
+}
+
+int do_lock_unlock_test(char *device, int cmd42,char **pwd_arg)
+{
+	int fd, ret = 0;
+	int cmd42_para; //parameter of cmd42
+	char pwd[MAX_PWD_LENGTH+1]; //password
+	int *status;
+
+	fd = open(device, O_RDWR);
+	if (fd < 0) {
+		perror("open");
+		exit(1);
+	}
+
+	// if(set_cmd_para(&cmd42_para, argv[2]) < 0)
+	// {
+	// 	close(fd);
+	// 	exit(1);
+	// }
+	cmd42_para = cmd42;
+	if(cmd42_para==CMD42_ERASE)
+	{
+		char *warnInfo = "Warning: all card data will be erased together with PWD";
+		if(ask_yes_or_no(warnInfo) == 0)
+		{
+			close(fd);
+			exit(1);
+		}
+		status = read_status(&fd);
+		printf("lock/unlock: %d, result: %d\n", status[0], status[1]);
+		
+		if(status[0]==0)
+		{
+			show_cmd42_error_msg(cmd42_para, status[0], 0);
+			close(fd);
+			exit(1);
+		}
+	}
+
+
+	strcpy(pwd, pwd_arg[0]);
+	if(pwd_arg[1] != NULL)
+	{
+		strcat(pwd, pwd_arg[1]);
+	}
+	ret = set_cmd42(cmd42_para, pwd, &fd);
 	close(fd);
 	return ret;
 }
@@ -125,26 +174,32 @@ int set_cmd_para(int *cmd_para, char * arg)
 	return 1;
 }
 
-void show_cmd42_error_msg(int cmd_para, int lock_status)
+void show_cmd42_error_msg(int cmd_para, int lock_status, int pwd_num)
 {
 	printf("Warning: ");
 	if (cmd_para == CMD42_SET_PWD) {
-		printf("Set password error\n");
+		if(pwd_num == 2)
+			printf("The origin password is wrong\n");
+		else
+			printf("Already set password, try to use \"Password NewPassword\" format to set new password\n");
 	}
 	else if (cmd_para == CMD42_CLR_PWD) {
-		printf("Already no set password\n");
+		printf("Wrong password or already no set password\n");
 	}
 	else if (cmd_para == CMD42_LOCK) {
 		if(lock_status==1)
 			printf("Already lock\n");
 		else
-			printf("No password set yet\n");
+			printf("Wrong password or no password set yet\n");
 	}
 	else if (cmd_para == CMD42_SET_LOCK) {
 		printf("Set password and lock the card fail\n");
 	}
 	else if (cmd_para == CMD42_UNLOCK) {
-		printf("Already unlock\n");
+		if(lock_status==1)
+			printf("Wrong password\n");
+		else
+			printf("Already unlock\n");
 	}
 	else if (cmd_para == CMD42_ERASE) {
 		printf("Need to lock the card first\n");
@@ -297,6 +352,6 @@ int ask_yes_or_no(char * warnInfo)
 		if(answer == 'Y' || answer == 'y')
 			return 1;
 		else if(answer == 'N' || answer == 'n')
-			return -1;
+			return 0;
 	}
 }
