@@ -13,8 +13,7 @@
 #define R1_LOCK_ULOCK_FAIL (1 << 24) /* R1 bit24 */
 
 
-int do_lock_unlock(int nargs, char **argv); //CMD42
-int do_lock_unlock_test(char *device, int cmd42,char **pwd);
+int do_lock_unlock(char *device, int cmd42,char **pwd); //CMD42
 void disk_format(char *device);
 int do_read_status(int nargs, char **argv);
 

@@ -210,7 +210,7 @@ int main(int argc, char **argv )
 		if(argument.cmd42_para != -1)
 		{
 			int ret = 0;
-			ret = do_lock_unlock_test(argument.device, argument.cmd42_para, argument.pwd);
+			ret = do_lock_unlock(argument.device, argument.cmd42_para, argument.pwd);
 			if(ret == 1)
 			{	
 				int fd;
