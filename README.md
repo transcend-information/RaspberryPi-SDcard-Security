@@ -1,6 +1,6 @@
 
 ## Compile the executable file
-goto the program folder and use below command line
+goto SCSI-SDcard-CMD42 folder and use below command line
 ```bash
 gcc -o sdlock  main.c libscsi.c
 
