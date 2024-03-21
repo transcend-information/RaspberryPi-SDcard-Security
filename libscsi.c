@@ -49,9 +49,12 @@ int do_lock_unlock(char *device, int cmd42,char **pwd_arg)
 			exit(1);
 		}
 	}
-
-
-	strcpy(pwd, pwd_arg[0]);
+	else
+	{		
+		strcpy(pwd, pwd_arg[0]);
+	}
+	
+	
 	if(pwd_arg[1] != NULL)
 	{
 		strcat(pwd, pwd_arg[1]);
