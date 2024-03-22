@@ -259,7 +259,6 @@ int set_cmd42(int cmd_para,  char *pwd, int *fd)
 
 int ask_yes_or_no(char * warnInfo)
 {	
-	char answer[20];
 	printf("%s\n",warnInfo);
 	printf("Do you want to continue? [Y/n] ");
 
