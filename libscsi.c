@@ -12,7 +12,7 @@
 #include "libscsi.h"
 
 //lock/unlock feature implementation
-int do_lock_unlock(char *device, int cmd42,char **pwd_arg)
+int do_lock_unlock(char *device, int cmd42,char *pwd_arg)
 {
 	int fd, ret = 0;
 	int cmd42_para; //parameter of cmd42
@@ -44,21 +44,16 @@ int do_lock_unlock(char *device, int cmd42,char **pwd_arg)
 		
 		if(status[0]==0)
 		{
-			show_cmd42_error_msg(cmd42_para, status[0], 0);
+			show_cmd42_error_msg(cmd42_para, status[0]);
 			close(fd);
 			exit(1);
 		}
 	}
 	else
 	{		
-		strcpy(pwd, pwd_arg[0]);
+		strcpy(pwd, pwd_arg);
 	}
 	
-	
-	if(pwd_arg[1] != NULL)
-	{
-		strcat(pwd, pwd_arg[1]);
-	}
 	ret = set_cmd42(cmd42_para, pwd, &fd);
 	close(fd);
 	return ret;
@@ -98,14 +93,11 @@ int set_cmd_para(int *cmd_para, char * arg)
 	return 1;
 }
 
-void show_cmd42_error_msg(int cmd_para, int lock_status, int pwd_num)
+void show_cmd42_error_msg(int cmd_para, int lock_status)
 {
 	printf("Warning: ");
 	if (cmd_para == CMD42_SET_PWD) {
-		if(pwd_num == 2)
-			printf("The origin password is wrong\n");
-		else
-			printf("Already set password, try to use \"Password NewPassword\" format to set new password\n");
+		printf("Already set password, try to use 'PasswordNewPassword' format to set new password\n");
 	}
 	else if (cmd_para == CMD42_CLR_PWD) {
 		printf("Wrong password or already no set password\n");
@@ -267,11 +259,11 @@ int set_cmd42(int cmd_para,  char *pwd, int *fd)
 
 int ask_yes_or_no(char * warnInfo)
 {	
+	char answer[20];
 	printf("%s\n",warnInfo);
 	printf("Do you want to continue? [Y/n] ");
 	while (1)
 	{
-		char *answer;
 		scanf("%s", answer);
 		if(answer[0] == 'Y' || answer[0] == 'y')
 			return 1;

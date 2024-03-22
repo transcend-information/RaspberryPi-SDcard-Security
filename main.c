@@ -12,8 +12,7 @@
 struct  arguments
 {
 	int cmd42_para;
-	char *pwd[2];
-	int pwd_num;
+	char *pwd;
 	// char *new_pwd;
 	int cmd13;
 	char *device;
@@ -50,46 +49,25 @@ int is_transcend_reader(char *device)
 	return ret;
 }
 
-int parse_pwd(char *arg, int max_num, struct arguments *argument)
-{
-	char *token;
-	int count=0;
-	const char s[2] = " ";
-	token = strtok(arg, s);
-	while(token != NULL)
-	{
-		if(count < max_num)
-		{
-			argument->pwd[count]=token;
-			count++;
-			token = strtok(NULL, s);
-		}
-		else
-			return 0;
-	}
-	argument->pwd_num = count;
-	return 1;
-}
-
 int match_pwd_rule(char *pwd, char **note)
 {
 	if(strlen(pwd) > MAX_PWD_LEN)
 	{
 		*note = "Password need 4~16 characters";
-		return 0;
+		return 1;
 	}
 	else if(strlen(pwd) < MIN_PWD_LEN)
 	{
 		*note = "Password need 4~16 characters";
-		return 0;
+		return 1;
 	}
-	return 1;
+	return 0;
 }
 
 static int parse_opt(int key, char *arg, struct argp_state *state)
 {
 	struct arguments *argument = state->input;	
-
+	
 	switch(key){
 		case 's':{
 			if(argument->cmd42_para < 0)
@@ -156,42 +134,16 @@ static int parse_opt(int key, char *arg, struct argp_state *state)
 
 	switch (key)
 	{
-		case 's': case 'q':{
-			if(!parse_pwd(arg, 2, argument))
-			{
-				argp_failure(state, 0, 0,
-								"Defining too many sets of password, "
-								"please set according to the format: \n"
-								"\t-s \"Password New_Password\""
-						);
-				return -1;
-			}
-			
+		case 's': case 'q': case 'c': case 'l': case 'u':{
 			char *ret_note;
-			if(!match_pwd_rule(argument->pwd[0], &ret_note) || 
-				(argument->pwd[1] != NULL && !match_pwd_rule(argument->pwd[1], &ret_note)))
+			argument->pwd = arg;
+			if(match_pwd_rule(argument->pwd, &ret_note) == 1)
 			{
 				argp_failure(state, 0, 0, "%s", ret_note);
 				return -1;
 			}
 			break;
 		}
-		case 'c': case 'l': case 'u':{
-			if(!parse_pwd(arg, 1, argument))
-			{
-				argp_failure(state, 1, 0, "Password is illegal");
-				return -1;
-			}
-			
-			char *ret_note;
-			if(!match_pwd_rule(argument->pwd[0], &ret_note))
-			{
-				argp_failure(state, 0, 0, "%s", ret_note);
-				return -1;
-			}
-			break;
-		}
-		
 		default:
 			break;
 	}
@@ -206,7 +158,7 @@ int main(int argc, char **argv )
 {
 	struct argp_option options[] = {
 		{0, 0, 0, 0, "Security Options:", 1},
-		{"set-pwd", 's', "\"Password [New Password]\"", 0, "Set SD password or change password"},
+		{"set-pwd", 's', "Password[New Password]", 0, "Set SD password or change password"},
 		{"quick-lock", 'q', "\"Password [New Password]\"", 0, "Set SD password and lock the card"},		
 		{"clear", 'c', "Password", 0, "Clear SD password"},
 		{"lock"	, 'l', "Password", 0, "Lock SD by password"},
@@ -236,13 +188,11 @@ int main(int argc, char **argv )
 			   "Device is %s\n"
 			   "cmd42 is %d\n"
 			   "pwd is %s\n"
-			   "new_pwd is %s\n"
 			   "cmd13 is %d\n"
 			   "\n",
 			   argument.device,
 			   argument.cmd42_para,
-			   argument.pwd[0],
-			   argument.pwd[1],
+			   argument.pwd,
 			   argument.cmd13);
 
 		if(argument.cmd42_para != -1)
@@ -253,10 +203,7 @@ int main(int argc, char **argv )
 			{	
 				int fd;
 				int *status;
-				if(argument.pwd[0] != NULL)
-				{
-
-				}
+				
 				fd = open(argument.device, O_RDWR);
 				if (fd < 0) {
 					perror("open");
@@ -268,7 +215,7 @@ int main(int argc, char **argv )
 				printf("lock/unlock: %d, result: %d\n", status[0], status[1]);
 
 				if(status[1]==1)
-					show_cmd42_error_msg(argument.cmd42_para, status[0], argument.pwd_num);
+					show_cmd42_error_msg(argument.cmd42_para, status[0]);
 				else
 				{
 					if(status[0]==1)
