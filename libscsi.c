@@ -125,9 +125,17 @@ void show_cmd42_error_msg(int cmd_para, int lock_status)
 void disk_format(char *device)
 {
 	char cmd[30];
+	strcpy(cmd, "sudo umount ");
+	strcat(cmd, device);
+	if(system(cmd) == -1)
+	{
+		printf("Error to unmount\n");	
+		return ;
+	}
+	
+	strcpy(cmd, "");
 	strcpy(cmd, "sudo mkfs.vfat ");
 	strcat(cmd, device);
-
 	if(system(cmd) == -1)
 		printf("Error to format\n");	
 }
