@@ -20,6 +20,36 @@ struct  arguments
 	int arg_count;
 };
 
+int is_transcend_reader(char *device)
+{
+	int ret = 1;
+	FILE *ptr = NULL;
+	char *TS_VID = "8564";
+	char readbuf[256];
+	char *udevadm_cmd = "udevadm info --query=property -n ";
+	char *grep_cmd = " | grep ID_USB_VENDOR_ID";
+	char cmd[100];
+	char *vid = malloc(10);
+
+	strcpy(cmd,udevadm_cmd);
+	strcat(cmd,device);
+	strcat(cmd,grep_cmd);
+	if((ptr = popen(cmd, "r")) != NULL)
+	{
+		while(fgets(readbuf,256,ptr) != NULL)
+		{	
+			strncpy(vid, readbuf, strlen(readbuf)-1);
+			break;	
+		}
+		pclose(ptr);
+	}
+
+	if(strstr(vid, TS_VID) != NULL) // vid is 8564
+		ret=0;
+
+	return ret;
+}
+
 int parse_pwd(char *arg, int max_num, struct arguments *argument)
 {
 	char *token;
@@ -196,11 +226,19 @@ int main(int argc, char **argv )
 	struct argp argp = {options, parse_opt, "Device", 0};
 	if(!argp_parse(&argp, argc, argv, 0, 0, &argument))
 	{
-		printf("Device is %s\n"
+		if(is_transcend_reader(argument.device) == 1)
+		{
+			printf("Please use Transcend SD card reader\n");
+			return 0;
+		}
+
+		printf("\n"
+			   "Device is %s\n"
 			   "cmd42 is %d\n"
 			   "pwd is %s\n"
 			   "new_pwd is %s\n"
-			   "cmd13 is %d\n",
+			   "cmd13 is %d\n"
+			   "\n",
 			   argument.device,
 			   argument.cmd42_para,
 			   argument.pwd[0],
