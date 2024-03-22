@@ -262,14 +262,19 @@ int ask_yes_or_no(char * warnInfo)
 	char answer[20];
 	printf("%s\n",warnInfo);
 	printf("Do you want to continue? [Y/n] ");
+
+	char answer[5];
+	int c;
 	while (1)
 	{
-		scanf("%s", answer);
+		scanf("%3s", answer);
 		if(answer[0] == 'Y' || answer[0] == 'y')
 			return 1;
 		else if(answer[0] == 'N' || answer[0] == 'n')
 			return 0;
 		else
 			printf("Please press [Y/y] to continue or [N/n] to cancel :");
+
+		while((c = fgetc(stdin)) != '\n' && c != EOF);//Flush stdin
 	}
 }
