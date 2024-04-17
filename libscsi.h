@@ -13,6 +13,34 @@
 #define R1_LOCK_ULOCK_FAIL (1 << 24) /* R1 bit24 */
 
 
+
+#include <linux/mmc/ioctl.h>
+/* From kernel linux/mmc/core.h */
+#define MMC_RSP_NONE	0			/* no response */
+#define MMC_RSP_PRESENT	(1 << 0)
+#define MMC_RSP_136	(1 << 1)		/* 136 bit response */
+#define MMC_RSP_CRC	(1 << 2)		/* expect valid crc */
+#define MMC_RSP_BUSY	(1 << 3)		/* card may send busy */
+#define MMC_RSP_OPCODE	(1 << 4)		/* response contains opcode */
+
+#define MMC_CMD_AC	(0 << 5)
+#define MMC_CMD_ADTC	(1 << 5)
+#define MMC_CMD_BC	(2 << 5)
+
+#define MMC_RSP_SPI_S1	(1 << 7)		/* one status byte */
+#define MMC_RSP_SPI_BUSY (1 << 10)		/* card may send busy */
+
+#define MMC_SEND_STATUS		13	/* ac   [31:16] RCA        R1  */
+#define MMC_CMD_AC	(0 << 5)
+#define MMC_CMD_ADTC	(1 << 5)
+#define MMC_CMD_BC	(2 << 5)
+
+
+#define MMC_RSP_R1	(MMC_RSP_PRESENT|MMC_RSP_CRC|MMC_RSP_OPCODE)
+#define MMC_RSP_R1B	(MMC_RSP_PRESENT|MMC_RSP_CRC|MMC_RSP_OPCODE|MMC_RSP_BUSY)
+
+
+
 int do_lock_unlock(char *device, int cmd42,char *pwd); //CMD42
 void disk_format(char *device);
 int do_read_status(int nargs, char **argv);
@@ -22,3 +50,5 @@ int set_cmd42(int cmd_para,  char *pwd, int * fd);
 int * read_status(int *fd);
 void show_cmd42_error_msg(int cmd_para, int lock_status);
 int ask_yes_or_no(char * warnInfo);
+
+int send_status(int fd, __u32 *response);

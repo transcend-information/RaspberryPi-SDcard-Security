@@ -209,6 +209,30 @@ int * read_status(int *fd)
 	return ret;
 }
 
+int send_status(int fd, __u32 *response)
+{
+	int ret = 0;
+	struct mmc_ioc_cmd idata;
+
+	memset(&idata, 0, sizeof(idata));
+	idata.opcode = MMC_SEND_STATUS;
+	idata.arg = (1 << 16);
+	idata.flags = MMC_RSP_R1 | MMC_CMD_AC;
+
+	ret = ioctl(fd, MMC_IOC_CMD, &idata);
+	if (ret)
+	{
+		printf("ioctl ret is  %d\n", ret);
+		perror("ioctl");
+	}
+
+	*response = idata.response[0];
+	for(int i=0 ; i<4 ;i++)
+		printf("%d\n", idata.response[i]);
+
+	return ret;
+}
+
 int set_cmd42(int cmd_para,  char *pwd, int *fd)
 {
 	int ret=0;

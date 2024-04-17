@@ -26,9 +26,9 @@ int is_transcend_reader(char *device)
 	char *TS_VID = "8564";
 	char readbuf[256];
 	char *udevadm_cmd = "udevadm info --query=property -n ";
-	char *grep_cmd = " | grep ID_USB_VENDOR_ID";
+	char *grep_cmd = " | grep -E 'ID_USB_VENDOR_ID|ID_VENDOR_ID'";
 	char cmd[100];
-	char *vid = malloc(10);
+	char *vid = malloc(25);
 
 	strcpy(cmd,udevadm_cmd);
 	strcat(cmd,device);
@@ -38,14 +38,38 @@ int is_transcend_reader(char *device)
 		while(fgets(readbuf,256,ptr) != NULL)
 		{	
 			strncpy(vid, readbuf, strlen(readbuf)-1);
-			break;	
+			if(strstr(vid, TS_VID) != NULL) // vid is 8564
+			{
+				ret=0;		
+				break;
+			}			
 		}
 		pclose(ptr);
 	}
 
-	if(strstr(vid, TS_VID) != NULL) // vid is 8564
-		ret=0;
+	return ret;
+}
 
+int is_os_devcie(char *device)
+{
+	int ret = 0;
+	FILE *ptr = NULL;
+	char readbuf[256];
+	char *df_cmd = "df / ";
+
+	if((ptr = popen(df_cmd, "r")) != NULL)
+	{
+		while(fgets(readbuf,256,ptr) != NULL)
+		{	
+			// strncpy(os_device, readbuf, strlen(readbuf)-1);
+			if(strstr(readbuf, device) != NULL) // os is installed on device
+			{
+				ret=1;		
+				break;
+			}			
+		}
+		pclose(ptr);
+	}
 	return ret;
 }
 
@@ -178,22 +202,42 @@ int main(int argc, char **argv )
 	struct argp argp = {options, parse_opt, "Device", 0};
 	if(!argp_parse(&argp, argc, argv, 0, 0, &argument))
 	{
+
+
+		// if(strstr(argument.device, "mmc"))
+		// {
+		// 	int fd;
+			
+		// 	fd = open(argument.device, O_RDWR);
+		// 	if (fd < 0) {
+		// 		perror("open");
+		// 		exit(1);
+		// 	}
+		// 	unsigned *response;
+		// 	send_status(fd, response);
+		// }
+		
+		if(is_os_devcie(argument.device) == 1)
+		{
+			printf("Lock function cannot work on OS device\n");
+			return 0;
+		}
 		if(is_transcend_reader(argument.device) == 1)
 		{
 			printf("Please use Transcend SD card reader\n");
 			return 0;
 		}
 
-		printf("\n"
-			   "Device is %s\n"
-			   "cmd42 is %d\n"
-			   "pwd is %s\n"
-			   "cmd13 is %d\n"
-			   "\n",
-			   argument.device,
-			   argument.cmd42_para,
-			   argument.pwd,
-			   argument.cmd13);
+		// printf("\n"
+		// 	   "Device is %s\n"
+		// 	   "cmd42 is %d\n"
+		// 	   "pwd is %s\n"
+		// 	   "cmd13 is %d\n"
+		// 	   "\n",
+		// 	   argument.device,
+		// 	   argument.cmd42_para,
+		// 	   argument.pwd,
+		// 	   argument.cmd13);
 
 		if(argument.cmd42_para != -1)
 		{
