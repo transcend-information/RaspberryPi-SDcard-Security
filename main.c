@@ -203,7 +203,6 @@ int main(int argc, char **argv )
 	if(!argp_parse(&argp, argc, argv, 0, 0, &argument))
 	{
 
-
 		// if(strstr(argument.device, "mmc"))
 		// {
 		// 	int fd;
