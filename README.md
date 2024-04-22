@@ -10,29 +10,47 @@ gcc -o sdlock  main.c libscsi.c
 ```
 
 ## Lock/Unlock SD
-```bash
-sudo ./sdlock <Option> [<Password>] <Device>
-```
-example1:
-```bash
-sudp ./sdlock -s transcend /dev/sda
-```
-this command will set "transcend" as password for device /dev/sda
 
-example2:
+1. Set password for SD by following command
+
 ```bash
-sudp ./sdlock -e /dev/sda
+sudp ./sdlock --set-pwd <Password> /dev/sdX
 ```
-this command will force erase device /dev/sda
+
+2. Set password for SD and lock immediately by following command
+
+```bash
+sudp ./sdlock -quick-lock <Password> /dev/sdX
+```
+
+3. Lock SD by password by following command
+
+```bash
+sudp ./sdlock --lock <Password> /dev/sdX
+```
+
+4. Unlock SD by password by following command
+
+```bash
+sudp ./sdlock --unlock <Password> /dev/sdX
+```
+
+5. Clear password by following command
+
+```bash
+sudp ./sdlock --clear <Password> /dev/sdX
+```
+
+6. Force erase SD card by following command
+
+```bash
+sudp ./sdlock --erase  /dev/sdX
+```
 
 ## Check SD status
 
-```bash
-sudo ./sdlock -t <Device>
-```
-this command will show the device is lock or not
+- Get SD is Lock/Unlock status
 
-## Help
 ```bash
-sudo ./sdlock --help 
+sudo ./sdlock --status <Device>
 ```
