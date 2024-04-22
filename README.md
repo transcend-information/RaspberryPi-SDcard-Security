@@ -1,3 +1,6 @@
+This document provides a way to set SD Lock/Ulock on RaspberryPi / NVIDIA Jetson Nano
+
+**Note:The project works for Transcend RDF5 reader.**
 
 ## Compile the executable file
 goto SCSI-SDcard-CMD42 folder and use below command line
