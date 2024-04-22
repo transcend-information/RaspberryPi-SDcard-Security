@@ -1,4 +1,4 @@
-This document provides a way to set SD Lock/Ulock on RaspberryPi / NVIDIA Jetson Nano
+This document provides a way to set SD Lock/Ulock on NVIDIA Jetson Nano
 
 **Note:The project works for Transcend RDF5 reader.**
 
@@ -20,7 +20,7 @@ sudp ./sdlock --set-pwd <Password> /dev/sdX
 2. Set password for SD and lock immediately by following command
 
 ```bash
-sudp ./sdlock -quick-lock <Password> /dev/sdX
+sudp ./sdlock --quick-lock <Password> /dev/sdX
 ```
 
 3. Lock SD by password by following command
