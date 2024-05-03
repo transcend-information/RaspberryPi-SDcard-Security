@@ -169,8 +169,7 @@ int * read_status(int *fd)
 
 	__u8 data_block[16]={0};
     unsigned char sense_b[16]={0};
-    unsigned char CmdBlk16[16] = 
-    { 0xF5, 0x13, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00};
+    unsigned char CmdBlk16[16] = RDF5CMD13;
     sg_io_hdr_t io_hdr;
     memset(&io_hdr, 0, sizeof(sg_io_hdr_t));
 
@@ -254,8 +253,7 @@ int set_cmd42(int cmd_para,  char *pwd, int *fd)
 	}
 
     unsigned char sense_b[32];
-    unsigned char CmdBlk16[16] = 
-    { 0xF5, 0x42, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00};
+    unsigned char CmdBlk16[16] = RDF5CMD42;
     sg_io_hdr_t io_hdr;
     memset(&io_hdr, 0, sizeof(sg_io_hdr_t));
 
