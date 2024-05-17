@@ -252,7 +252,7 @@ int main(int argc, char **argv )
 
 				status = read_status(&fd);
 
-				printf("lock/unlock: %d, result: %d\n", status[0], status[1]);
+				// printf("lock/unlock: %d, result: %d\n", status[0], status[1]);
 
 				if(status[1]==1)
 					show_cmd42_error_msg(argument.cmd42_para, status[0]);
@@ -282,7 +282,7 @@ int main(int argc, char **argv )
 			status = read_status(&fd);
 
 			ret = status[0];
-			printf("lock/unlock: %d, result: %d\n", status[0],status[1]);
+			// printf("lock/unlock: %d, result: %d\n", status[0],status[1]);
 			if(ret)
 				printf("Device is lock\n");
 			else
