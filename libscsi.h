@@ -13,6 +13,8 @@
 #define R1_LOCK_ULOCK_FAIL (1 << 24) /* R1 bit24 */
 
 
+#define	TS_VID "TS-RDF5A"
+
 
 #include <linux/mmc/ioctl.h>
 /* From kernel linux/mmc/core.h */
