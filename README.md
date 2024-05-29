@@ -1,18 +1,24 @@
-This document describes how to use functions which our tool provides.
+This document provides a way to use the LOCK / UNLOCK command (CMD42) and Secure Erase via Transcend RDF5 Card Reader on Raspberry Pi / NVIDIA Jetson Nano.
+
+After the host sets the password and sends it to the card,  the card will be locked. Data will be read and write protected, and can be viewed and changed only by entering the correct password. Where an incorrect password is provided, the card will remain locked.
+
+A password-protected card will be automatically locked after power reset. To permanently unlock a card, please remove the password. 
 
 ## Hardware requirements	
-1. Support Platform
-   - Raspberry Pi 4
+1. Supported Platform
+   - Raspberry Pi 4 or later
    - NVIDIA Jetson Nano
+     
 2. Supported SD cards
-   - Transcend Embedded SD card
-   - Transcend Embedded mirco SD
+   - Transcend Embedded SD card / mirco SD
 
 3. Supported Card Reader
    - Transcend RDF5
 
 ## Compile the executable file
+
 Go to the project folder and use the command line below to build an executable file named 'sdsecure'.
+
 ```bash
 gcc main.c libscsi.c -o sdsecure
 ```
@@ -23,7 +29,7 @@ Please change the < device > parameter by the USB card reader device. ex. /dev/s
 
 ## Lock/Unlock SD card
 
-1. Set password for SD card using the following command.
+1. Set password for SD card 
 
 ```bash
 sudo ./sdsecure --set-pwd <Password> <device>
@@ -31,7 +37,7 @@ sudo ./sdsecure --set-pwd <Password> <device>
 ![alt text](https://github.com/transcend-information/RaspberryPi-SDcard-Security/blob/raspberryPi_document/captures/img_setpw.PNG?raw=true)  
 
 
-2. After setting the password, lock SD card with the password using the following command.
+2. After setting the password, lock SD card with the password
 
 ```bash
 sudo ./sdsecure --lock <Password> <device>
@@ -39,7 +45,7 @@ sudo ./sdsecure --lock <Password> <device>
 ![alt text](https://github.com/transcend-information/RaspberryPi-SDcard-Security/blob/raspberryPi_document/captures/img_lock.PNG?raw=true)  
 
 
-3. You can also use the following command to replace the steps of setting the password and locking the SD card. The SD card will be locked immediately.
+3. Quick-lock command : replace the steps of setting the password and locking the SD card. The SD card will be locked immediately.
 
 ```bash
 sudo ./sdsecure --quick-lock <Password> <device>
@@ -47,7 +53,7 @@ sudo ./sdsecure --quick-lock <Password> <device>
 ![alt text](https://github.com/transcend-information/RaspberryPi-SDcard-Security/blob/raspberryPi_document/captures/img_quicklock.PNG?raw=true)  
 
 
-4. Unlock the SD card with the password using the following command.
+4. Unlock the SD card with the password
 
 ```bash
 sudo ./sdsecure --unlock <Password> <device>
@@ -63,9 +69,9 @@ sudo ./sdsecure --clear <Password> <device>
 ![alt text](https://github.com/transcend-information/RaspberryPi-SDcard-Security/blob/raspberryPi_document/captures/img_clearpw.PNG?raw=true)  
 
 
-## Erase SD card
+## Secure Erase SD card
 
-Force erase all data on the SD card using the following command.
+Force erase all data on the SD card 
 
 ```bash
 sudo ./sdsecure --erase <device>
@@ -74,8 +80,6 @@ sudo ./sdsecure --erase <device>
 
 
 ## Check SD card status
-
-The following command will display the SD lock/unlock status.
 
 ```bash
 sudo ./sdsecure --status <device>
