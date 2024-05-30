@@ -34,7 +34,7 @@ Please change the < device > parameter by the USB card reader device. ex. /dev/s
 ```bash
 sudo ./sdsecure --set-pwd <Password> <device>
 ```
-![alt text](https://github.com/transcend-information/RaspberryPi-SDcard-Security/blob/raspberryPi_document/captures/img_setpw.PNG?raw=true)  
+![alt text](../captures/img_setpw.PNG?raw=true)  
 
 
 2. After setting the password, lock SD card with the password
