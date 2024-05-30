@@ -42,7 +42,7 @@ sudo ./sdsecure --set-pwd <Password> <device>
 ```bash
 sudo ./sdsecure --lock <Password> <device>
 ```
-![alt text](https://github.com/transcend-information/RaspberryPi-SDcard-Security/blob/raspberryPi_document/captures/img_lock.PNG?raw=true)  
+![alt text](captures/img_lock.PNG?raw=true)  
 
 
 3. Quick-lock command : replace the steps of setting the password and locking the SD card. The SD card will be locked immediately.
@@ -50,7 +50,7 @@ sudo ./sdsecure --lock <Password> <device>
 ```bash
 sudo ./sdsecure --quick-lock <Password> <device>
 ```
-![alt text](https://github.com/transcend-information/RaspberryPi-SDcard-Security/blob/raspberryPi_document/captures/img_quicklock.PNG?raw=true)  
+![alt text](captures/img_quicklock.PNG?raw=true)  
 
 
 4. Unlock the SD card with the password
@@ -58,7 +58,7 @@ sudo ./sdsecure --quick-lock <Password> <device>
 ```bash
 sudo ./sdsecure --unlock <Password> <device>
 ```
-![alt text](https://github.com/transcend-information/RaspberryPi-SDcard-Security/blob/raspberryPi_document/captures/img_unlock.PNG?raw=true)  
+![alt text](captures/img_unlock.PNG?raw=true)  
 
 
 5. Remove the password of the SD card using the following command.
@@ -66,7 +66,7 @@ sudo ./sdsecure --unlock <Password> <device>
 ```bash
 sudo ./sdsecure --clear <Password> <device>
 ```
-![alt text](https://github.com/transcend-information/RaspberryPi-SDcard-Security/blob/raspberryPi_document/captures/img_clearpw.PNG?raw=true)  
+![alt text](captures/img_clearpw.PNG?raw=true)  
 
 
 ## Secure Erase SD card
@@ -76,7 +76,7 @@ Force erase all data on the SD card
 ```bash
 sudo ./sdsecure --erase <device>
 ```
-![alt text](https://github.com/transcend-information/RaspberryPi-SDcard-Security/blob/raspberryPi_document/captures/img_erase.PNG?raw=true)  
+![alt text](captures/img_erase.PNG?raw=true)  
 
 
 ## Check SD card status
@@ -84,5 +84,5 @@ sudo ./sdsecure --erase <device>
 ```bash
 sudo ./sdsecure --status <device>
 ```
-![alt text](https://github.com/transcend-information/RaspberryPi-SDcard-Security/blob/raspberryPi_document/captures/img_status.PNG?raw=true)  
+![alt text](captures/img_status.PNG?raw=true)  
 
