@@ -4,13 +4,16 @@ After the host sets the password and sends it to the card,  the card will be loc
 
 A password-protected card will be automatically locked after power reset. To permanently unlock a card, please remove the password. 
 
+## Note : The project works for Transcend Embedded microSD / SD products with the RDF5 Card Reader.
+
 ## Hardware requirements	
 1. Supported Platform
    - Raspberry Pi 4 or later
    - NVIDIA Jetson Nano
      
 2. Supported SD cards
-   - Transcend Embedded SD card / mirco SD
+   - Transcend Embedded microSD 430T / 450I / 460I / 460T / 465T
+   - Transcend Embedded SD SDC460T / SDC400I / SDC240T
 
 3. Supported Card Reader
    - Transcend RDF5
