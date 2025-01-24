@@ -48,6 +48,7 @@ int do_lock_unlock(char *device, int cmd42,char *pwd_arg)
 			close(fd);
 			exit(1);
 		}
+		
 	}
 	else
 	{		
@@ -238,10 +239,8 @@ int set_cmd42(int cmd_para,  char *pwd, int *fd)
 	int block_size = 0;
 	int pwd_len = strlen(pwd);
 
-	if (cmd_para==CMD42_ERASE)
-		block_size = 2; //set blk size to 2-byte for Force Erase @DDR50 compability
-	else
-		block_size = DATA_BLOCK_SIZE;
+	block_size = DATA_BLOCK_SIZE;
+	
 	// printf("Set to data block length = %d byte(s).\n", block_size);
 	if (cmd_para==CMD42_ERASE) {
 		data_block_onebyte[0] = cmd_para;
