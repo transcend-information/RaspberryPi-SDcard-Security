@@ -176,7 +176,7 @@ int main(int argc, char **argv )
 	struct argp_option options[] = {
 		{0, 0, 0, 0, "Security Options:", 1},
 		{"set-pwd", 's', "Password[New Password]", 0, "Set SD password or change password"},
-		{"quick-lock", 'q', "\"Password [New Password]\"", 0, "Set SD password and lock the card"},		
+		{"quick-lock", 'q', "Password[New Password]", 0, "Set SD password and lock the card"},		
 		{"clear", 'c', "Password", 0, "Clear SD password"},
 		{"lock"	, 'l', "Password", 0, "Lock SD by password"},
 		{"unlock", 'u', "Password", 0, "Unlock SD by password"},
