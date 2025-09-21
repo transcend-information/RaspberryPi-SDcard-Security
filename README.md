@@ -16,7 +16,7 @@ A password-protected card will be automatically locked after power reset. To per
    - Transcend Embedded SD SDC460T / SDC400I / SDC240T
 
 3. Supported Card Reader
-   - Transcend RDF5
+   - Transcend RDF5 produced after 2019
 
 ## Compile the executable file
 
